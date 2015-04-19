@@ -14,14 +14,19 @@ Activity <- read.csv("activity.csv")
 
 ## What is mean total number of steps taken per day?
 
-First the total number of steps taken per day is calculted across all dates and plotted.
+First the total number of steps taken per day is calculted across all dates and plotted. The first few rows of results are displayed.
 ```{r}
 Totalstpperdate <- aggregate(steps ~ date, Activity, sum)
+head(Totalstpperdate)
+```
+
+The total number of steps is plotted as a histogram per frequency.
+```{r}
 library(ggplot2)
 qplot(Totalstpperdate$steps, binwindth = 1000, xlab = "Total numbers of steps taken each day")
 ```
 
-And then the mean and median values of these total numbers are calculted.
+The mean and median values of these total numbers are calculted.
 ```{r}
 summary(Totalstpperdate$steps)
 ```
@@ -29,10 +34,11 @@ The mean of total number of steps taken per day is 10770 and the median is 10760
 
 ## What is the average daily activity pattern?
 
-The average number of steps taken per each 5 minutes interval is calculated.
+The average number of steps taken per each 5 minutes interval is calculated. The first few rows of results are displayed.
 ```{r}
 averagestpperinterval <- aggregate(x=Activity$steps, by = list(interval = Activity$interval), mean, na.rm=TRUE)
 colnames(averagestpperinterval) = c("interval", "steps")
+head(averagestpperinterval)
 ```
 
 The plot for the average number of steps per interval is:
@@ -56,6 +62,11 @@ table(missing)
 ```
 2304 intervals are missing values of steps.
 All the missing values will be filled with mean value for all respective 5-minute intervals.
+The first few rows of mean values of steps for all respective intervals are showed as:
+```{r}
+head(averagestpperinterval)
+```
+The filling will be conducted as followed:
 ```{r}
 fill.value <- function(steps, interval) {
     filled <- NA
@@ -68,21 +79,27 @@ fill.value <- function(steps, interval) {
 filleddata <- Activity
 filleddata$steps <- mapply(fill.value, filleddata$steps, filleddata$interval)
 ```
-With the new data, the total number of steps taken per day is calculated and plotted.
+With the new data, the total number of steps taken per day is calculated and plotted. The results are shown with first few rows.
 ```{r}
 Totalstpperdatefilled <- aggregate(steps ~ date, filleddata, sum)
+head(Totalstpperdatefilled)
+```
+
+The histogram of the total number of steps taken per day for the filled dataset is plotted.
+
+```{r}
 library(ggplot2)
 qplot(Totalstpperdatefilled$steps, binwindth = 1000, xlab = "Total numbers of steps taken each day")
 ```
 
-And then the mean and median values of these total numbers are calculted.
+The mean and median values of these total numbers are calculted.
 ```{r}
 summary(Totalstpperdatefilled$steps)
 ```
-The mean and median are the same now due to adding the missing values for some intervals. Mean went higher and median stayed the same comparing the filled dataset with the original dataset.
+The mean and median are the same now due to adding the missing values for some intervals. The mean went higher but the median stayed the same comparing the filled dataset with the original dataset.
 
 ## Are there differences in activity patterns between weekdays and weekends?
-First we determine whether it is a weekday or not for all intervals.
+First we determine whether it is a weekday or not for all intervals. The result of first few rows are shown.
 ```{r}
 weekdayindicator <- function(date){
   day <- weekdays(date)
@@ -95,10 +112,13 @@ weekdayindicator <- function(date){
 }
 filleddata$date <- as.Date(filleddata$date)
 filleddata$weekdayind <- sapply(filleddata$date, FUN=weekdayindicator)
+head(filleddata)
 ```
-Then the mean total numer of steps taken per interval are calculated and plotted respectively for weekdays and weekends.
+The mean total numer of steps taken per interval are calculated and plotted respectively for weekdays and weekends.
 ```{r}
 averagestpperintervalweekdayind <- aggregate(steps ~ interval + weekdayind, data=filleddata, mean)
 ggplot(averagestpperintervalweekdayind, aes(interval, steps)) + geom_line() + facet_grid(weekdayind ~ .) +
     xlab("5-minute interval") + ylab("Number of steps")
 ```
+
+There are obvious differences between patterns from weekdays and weekends. On weekdays, the 750th to 1000th intervals have slightly higher numbers of steps while on weekends, the 1000th to 1750th intervals seem to have higher number of steps. 
